@@ -5,9 +5,14 @@ class ClicksController < ApplicationController
 
 	def create
 		@click = Click.new(click_params)
-		@uri = URI(@click.short_url)
+		uri = URI.parse(@click.short_url)
+		http = Net::HTTP.new(uri.host, uri.port)
+		http.use_ssl = true
+		request = Net::HTTP::Get.new(uri.request_uri)
+		request.initialize_http_header({"User-Agent" => "Mozilla/5.0 (Macintosh\; Intel Mac OS X 10_12_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36"})
+
 		(@click.click_count).times do
-			Net::HTTP.get(@uri)
+			http.request(request)
 		end
 
 		redirect_to root_path, notice: "Done clicking #{@click.click_count} times on #{@click.short_url}!"
